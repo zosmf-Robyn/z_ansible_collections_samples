@@ -1,12 +1,12 @@
 # =================================================================
 # Copyright 2021 https://github.com/multi-arch/multiarch-ci-playbooks
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,116 +17,177 @@
 ---
 # tasks file for configure-haproxy
 
-- include_vars: cluster-template.yaml
+- ansible.builtin.include_vars: cluster-template.yaml
 
 - name: Install haproxy
-  yum:
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.yum:
     name:
       - haproxy
       # - libsemanage-python
       - python3-libsemanage
     state: latest
-  notify: 
-  - restart haproxy
-  - restart firewalld
+  notify:
+    - restart haproxy
+    - restart firewalld
 
 - name: Create /etc/haproxy
-  file: 
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.file:
     path: /etc/haproxy
     state: directory
 
 - name: Create /etc/haproxy/haproxy.cfg
-  template:
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.template:
     src: etc/haproxy/haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
-  notify: 
-  - restart haproxy
+  notify:
+    - restart haproxy
 
 - name: Allow http traffic
-  firewalld:
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.posix.firewalld:
     service: http
-    permanent: yes
+    permanent: true
     zone: public
     state: enabled
   notify:
-  - restart firewalld
+    - restart firewalld
 
 - name: Allow http traffic
-  firewalld:
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.posix.firewalld:
     service: http
-    permanent: yes
+    permanent: true
     zone: internal
     state: enabled
   notify:
-  - restart firewalld
+    - restart firewalld
 
 - name: Allow https traffic
-  firewalld:
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.posix.firewalld:
     service: https
-    permanent: yes
+    permanent: true
     zone: public
     state: enabled
   notify:
-  - restart firewalld
- 
+    - restart firewalld
+
 - name: Allow https traffic
-  firewalld:
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.posix.firewalld:
     service: https
-    permanent: yes
+    permanent: true
     zone: internal
     state: enabled
   notify:
-  - restart firewalld
-  
+    - restart firewalld
+
 - name: Allow traffic at port 443
-  firewalld:
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.posix.firewalld:
     port: 443/tcp
-    permanent: yes
+    permanent: true
     zone: "{{ item }}"
     state: enabled
   with_items:
-  - internal
-  - public
+    - internal
+    - public
   notify:
-  - restart firewalld
+    - restart firewalld
 
 - name: Allow traffic at port 6443
-  firewalld:
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.posix.firewalld:
     port: 6443/tcp
-    permanent: yes
+    permanent: true
     zone: "{{ item }}"
     state: enabled
   with_items:
-  - internal
-  - public
+    - internal
+    - public
   notify:
-  - restart firewalld
+    - restart firewalld
 
 - name: Allow traffic at port 22623
-  firewalld:
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.posix.firewalld:
     port: 22623/tcp
-    permanent: yes
+    permanent: true
     zone: "{{ item }}"
     state: enabled
   with_items:
-  - internal
-  - public
+    - internal
+    - public
   notify:
-  - restart firewalld
+    - restart firewalld
+
+- name: Allow selinux for haproxy
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.shell: setsebool -P haproxy_connect_any=1
+
+# - name: start haproxy
+#   become: yes
+#   become_user: root
+#   become_method: sudo
+#   service:
+#     name: haproxy
+#     state: started
+#     enabled: yes
 
 - name: Restart haproxy
-  service: name=haproxy state=restarted
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.service:
+    name: haproxy
+    state: restarted
 
 - name: Restart firewalld
-  service: name=firewalld state=restarted
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.service:
+    name: firewalld
+    state: restarted
 
 - name: Check if haproxy is running
-  service:
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.service:
     name: haproxy
     state: started
 
 - name: Check if firewalld is running
-  service:
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.service:
     name: firewalld
     state: started
 
@@ -137,7 +198,7 @@
 #       Output of `systemctl status haproxy`:
 #       {{ service_haproxy_status.stdout }}
 #       {{ service_haproxy_status.stderr }}
-#   when: services_state.ansible_facts.services['haproxy.service'].state != 'started'  
+#   when: services_state.ansible_facts.services['haproxy.service'].state != 'started'
 
 # - name: Report status of firewalld
 #   fail:
@@ -146,4 +207,4 @@
 #       Output of `systemctl status firewalld`:
 #       {{ service_firewalld_status.stdout }}
 #       {{ service_firewalld_status.stderr }}
-#   when: services_state.ansible_facts.services['firewalld.service'].state != 'started'  
+#   when: services_state.ansible_facts.services['firewalld.service'].state != 'started'

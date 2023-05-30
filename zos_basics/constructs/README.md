@@ -31,20 +31,20 @@ playbook for additional details and configuration.
 ## Configuration
 - Configure the included [inventory.yml](inventories/inventory.yml) with the
   information from the managed z/OS host.
-  - Review [inventory documentation](../../../docs/share/zos_core/configure_inventory.md)
+  - Review [inventory documentation](../../docs/share/zos_core/configure_inventory.md)
 - Configure the included **host_vars** [zos_host.yml](inventories/host_vars/zos_host.yml)
   with the information from your z/OS system.
-  - Review [host_vars documentation](../../../docs/share/zos_core/configure_host_vars.md)
+  - Review [host_vars documentation](../../docs/share/zos_core/configure_host_vars.md)
     and any additional noted variables in the configuration.
 
 ### Run desired playbook with the supported Ansible --tags
-This project has included a `site.yml` playbook that serves as the master playbook
+This project has included a `site.yml` playbook that serves as the primary playbook
 that provides additional prerequisite checks then it invokes the `zos_job_submit_ansible_constructs.yml`
 playbook.
 
-If you want to run the master playbook `site.yml` it will check that your environment
+If you want to run the primary playbook `site.yml` it will check that your environment
 has the correct version of Ansible as well as the collection needed to execute
-correctly. To run the master playbook, use command:
+correctly. To run the primary playbook, use command:
 
 ```bash
 ansible-playbook -i inventory.yml site.yml

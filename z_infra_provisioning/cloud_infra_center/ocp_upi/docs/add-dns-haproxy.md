@@ -11,11 +11,11 @@ cluster_nodes:
     bootstrap:
       ip: 172.26.105.210
   infra:
-    worker-2e582:
+    worker-0:
       ip: 172.26.105.208
-    worker-5e74f:
+    worker-1:
       ip: 172.26.105.209
-    worker-dd190:
+    worker-2:
       ip: 172.26.105.211
   masters:
     master-0:
@@ -55,9 +55,9 @@ master-0              IN A 172.26.105.200
 master-1              IN A 172.26.105.207
 master-2              IN A 172.26.105.202
 
-worker-2e582              IN A 172.26.105.208
-worker-5e74f              IN A 172.26.105.209
-worker-dd190              IN A 172.26.105.211
+worker-0              IN A 172.26.105.208
+worker-1              IN A 172.26.105.209
+worker-2              IN A 172.26.105.211
 
 etcd-0              IN A 172.26.105.200
 etcd-1              IN A 172.26.105.207
@@ -67,6 +67,17 @@ _etcd-server-ssl._tcp IN SRV 0 10 2380 etcd-0.openshift.second.com.
                       IN SRV 0 10 2380 etcd-1.openshift.second.com.
                       IN SRV 0 10 2380 etcd-2.openshift.second.com.
 ```
+
+required DNS records
+
+|Record |Description|
+|------ |------------------------------------|
+api.<cluster_name>.<base_domain>. | A DNS A/AAAA or CNAME record, and a DNS PTR record, to identify the API load balancer. These records must be resolvable by both clients external to the cluster and from all the nodes within the cluster.|
+|api-int.<cluster_name>.<base_domain>. | A DNS A/AAAA or CNAME record, and a DNS PTR record, to internally identify the API load balancer. These records must be resolvable from all the nodes within the cluster.|
+|*.apps.<cluster_name>.<base_domain>.  |A wildcard DNS A/AAAA or CNAME record that refers to the application ingress load balancer. The application ingress load balancer targets the machines that run the Ingress Controller pods. The Ingress Controller pods run on the compute machines by default. These records must be resolvable by both clients external to the cluster and from all the nodes within the cluster.|
+|bootstrap.<cluster_name>.<base_domain>. |A DNS A/AAAA or CNAME record, and a DNS PTR record, to identify the bootstrap machine. These records must be resolvable by the nodes within the cluster.|
+|<master><n>.<cluster_name>.<base_domain>. |DNS A/AAAA or CNAME records and DNS PTR records to identify each machine for the control plane nodes. These records must be resolvable by the nodes within the cluster.|
+|<worker><n>.<cluster_name>.<base_domain>. |DNS A/AAAA or CNAME records and DNS PTR records to identify each machine for the worker nodes. These records must be resolvable by the nodes within the cluster.|
 
 You need to change the `openshift.second.com` to the second cluster domain name, and change servers' IPs and worker nodes' names.
 
@@ -180,13 +191,13 @@ backend ocp4-machine-config-server
 
 backend ocp4-router-http
    mode tcp
-         server worker-34de5 worker-34de5.openshift.first.com:80 check
-         server worker-4fe2f worker-4fe2f.openshift.first.com:80 check
+         server worker-0 worker-0.openshift.first.com:80 check
+         server worker-1 worker-1.openshift.first.com:80 check
 
 backend ocp4-router-https
    mode tcp
-         server worker-34de5 worker-34de5.openshift.first.com:443 check
-         server worker-4fe2f worker-4fe2f.openshift.first.com:443 check
+         server worker-0 worker-0.openshift.first.com:443 check
+         server worker-1 worker-1.openshift.first.com:443 check
 
 # the second cluster configuration 
 frontend ocp4-kubernetes-api-server-second
@@ -233,16 +244,16 @@ backend ocp4-machine-config-server-second
 
 backend ocp4-router-http-second
    mode tcp
-         server worker-2e582 worker-2e582.openshift.second.com:80 check
-         server worker-5e74f worker-5e74f.openshift.second.com:80 check
-         server worker-dd190 worker-dd190.openshift.second.com:80 check
+         server worker-0 worker-0.openshift.second.com:80 check
+         server worker-1 worker-1.openshift.second.com:80 check
+         server worker-2 worker-2.openshift.second.com:80 check
          
 
 backend ocp4-router-https-seconds
    mode tcp
-         server worker-2e582 worker-2e582.openshift.second.com:443 check
-         server worker-5e74f worker-5e74f.openshift.second.com:443 check
-         server worker-dd190 worker-dd190.openshift.second.com:443 check
+         server worker-0 worker-0.openshift.second.com:443 check
+         server worker-1 worker-1.openshift.second.com:443 check
+         server worker-2 worker-2.openshift.second.com:443 check
 ```
 
 **Note**: The second cluster's frontend and backend names can not be the same as first cluster ones.
